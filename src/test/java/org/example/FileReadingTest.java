@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class FileReadingTest {
 
     @Test
-    void testReadEmptyFile(@TempDir Path tempDir) throws IOException {
+    void testReadEmptyFile(@TempDir Path tempDir) throws IOException, GrepException {
         Path file = tempDir.resolve("empty.txt");
         Files.writeString(file, "");
 
@@ -23,7 +23,7 @@ class FileReadingTest {
     }
 
     @Test
-    void testReadSingleLine(@TempDir Path tempDir) throws IOException {
+    void testReadSingleLine(@TempDir Path tempDir) throws IOException, GrepException {
         Path file = tempDir.resolve("single.txt");
         Files.writeString(file, "Hello World");
 
@@ -34,7 +34,7 @@ class FileReadingTest {
     }
 
     @Test
-    void testReadMultipleLines(@TempDir Path tempDir) throws IOException {
+    void testReadMultipleLines(@TempDir Path tempDir) throws IOException, GrepException {
         Path file = tempDir.resolve("multiple.txt");
         Files.writeString(file, "Line 1\nLine 2\nLine 3");
 
@@ -48,7 +48,7 @@ class FileReadingTest {
 
     @Test
     void testReadNonExistentFile() {
-        assertThrows(IOException.class, () -> {
+        assertThrows(GrepException.class, () -> {
             Main.readFile("non_existent_file.txt");
         });
     }
