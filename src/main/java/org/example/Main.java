@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import java.util.stream.Collectors;
 public class Main {
     public static void main(String[] args) {
         if (args.length != 2) {
@@ -17,7 +18,9 @@ public class Main {
 
         try {
             List<String> lines = readFile(filename);
-            for (String line : lines) {
+            List<String> matchingLines = grep(searchString, lines);
+
+            for (String line : matchingLines) {
                 System.out.println(line);
             }
         } catch (IOException e) {
@@ -29,5 +32,11 @@ public class Main {
     public static List<String> readFile(String filename) throws IOException {
         Path path = Path.of(filename);
         return Files.readAllLines(path);
+    }
+
+    public static List<String> grep(String searchString, List<String> lines) {
+        return lines.stream()
+                .filter(line -> line.contains(searchString))
+                .collect(Collectors.toList());
     }
 }
