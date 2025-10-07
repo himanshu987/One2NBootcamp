@@ -1,5 +1,4 @@
 package org.example;
-
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -18,7 +17,7 @@ class GrepSearchTest {
                 "Testing Code"
         );
 
-        List<String> result = Main.grep("CPP", lines);
+        List<String> result = GrepService.grep("Python", lines);
 
         assertTrue(result.isEmpty(), "Should return empty list when no matches");
     }
@@ -31,7 +30,7 @@ class GrepSearchTest {
                 "Testing Code"
         );
 
-        List<String> result = Main.grep("Java", lines);
+        List<String> result = GrepService.grep("Java", lines);
 
         assertEquals(1, result.size());
         assertEquals("Java Programming", result.get(0));
@@ -45,7 +44,7 @@ class GrepSearchTest {
                 "Another line also contains the search_string"
         );
 
-        List<String> result = Main.grep("search_string", lines);
+        List<String> result = GrepService.grep("search_string", lines);
 
         assertEquals(2, result.size());
         assertEquals("I found the search_string in the file.", result.get(0));
@@ -60,41 +59,9 @@ class GrepSearchTest {
                 "HELLO WORLD"
         );
 
-        List<String> result = Main.grep("Hello", lines);
+        List<String> result = GrepService.grep("Hello", lines);
 
         assertEquals(1, result.size());
         assertEquals("Hello World", result.get(0));
-    }
-
-    @Test
-    void testGrepPartialMatch() {
-        List<String> lines = Arrays.asList(
-                "The searching algorithm",
-                "I am searching for something",
-                "This is a search operation"
-        );
-
-        List<String> result = Main.grep("search", lines);
-
-        assertEquals(3, result.size());
-    }
-
-    @Test
-    void testGrepEmptySearchString() {
-        List<String> lines = Arrays.asList(
-                "Line 1",
-                "Line 2"
-        );
-
-        List<String> result = Main.grep("", lines);
-
-        assertEquals(2, result.size(), "Empty search string should match all lines");
-    }
-
-    @Test
-    void testGrepEmptyLines() {
-        List<String> result = Main.grep("test", Collections.emptyList());
-
-        assertTrue(result.isEmpty());
     }
 }

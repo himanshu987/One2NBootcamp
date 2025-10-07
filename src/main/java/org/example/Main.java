@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class Main {
     public static void main(String[] args) {
@@ -20,11 +19,8 @@ public class Main {
 
         try {
             List<String> lines = readFile(filename);
-            List<String> matchingLines = grep(searchString, lines);
-
-            for (String line : matchingLines) {
-                System.out.println(line);
-            }
+            List<String> matchingLines = GrepService.grep(searchString, lines);
+            GrepService.printResults(matchingLines);
         } catch (GrepException e) {
             System.err.println(e.getMessage());
             System.exit(1);
@@ -56,11 +52,5 @@ public class Main {
         } catch (NoSuchFileException e) {
             throw new GrepException("./mygrep: " + filename + ": open: No such file or directory");
         }
-    }
-
-    public static List<String> grep(String searchString, List<String> lines) {
-        return lines.stream()
-                .filter(line -> line.contains(searchString))
-                .collect(Collectors.toList());
     }
 }
