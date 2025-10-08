@@ -3,7 +3,6 @@ package org.example;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 public class GrepService {
 
     public static List<String> grep(String searchString, List<String> lines) {
@@ -12,9 +11,8 @@ public class GrepService {
                 .collect(Collectors.toList());
     }
 
+    @Deprecated
     public static void printResults(List<String> matchingLines) {
-        for (String line : matchingLines) {
-            System.out.println(line);
-        }
+        OutputWriter.writeToStdout(matchingLines);
     }
 }
