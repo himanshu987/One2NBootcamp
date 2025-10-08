@@ -14,17 +14,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class GrepServiceTest {
 
-    private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-    private final PrintStream originalOut = System.out;
+    private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    private final PrintStream printStream = System.out;
 
     @BeforeEach
     void setUpStreams() {
-        System.setOut(new PrintStream(outContent));
+        System.setOut(new PrintStream(outputStream));
     }
 
     @AfterEach
     void restoreStreams() {
-        System.setOut(originalOut);
+        System.setOut(printStream);
     }
 
     @Test
@@ -103,7 +103,7 @@ class GrepServiceTest {
     void testPrintResultsEmpty() {
         GrepService.printResults(Collections.emptyList());
 
-        assertEquals("", outContent.toString());
+        assertEquals("", outputStream.toString());
     }
 
     @Test
@@ -111,7 +111,7 @@ class GrepServiceTest {
         List<String> lines = Arrays.asList("barbazfoo");
         GrepService.printResults(lines);
 
-        assertEquals("barbazfoo\n", outContent.toString());
+        assertEquals("barbazfoo\n", outputStream.toString());
     }
 
     @Test
@@ -119,7 +119,7 @@ class GrepServiceTest {
         List<String> lines = Arrays.asList("barbazfoo", "food");
         GrepService.printResults(lines);
 
-        assertEquals("barbazfoo\nfood\n", outContent.toString());
+        assertEquals("barbazfoo\nfood\n", outputStream.toString());
     }
 
     @Test
