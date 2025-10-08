@@ -9,14 +9,29 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        if (args.length != 2) {
-            System.err.println("Usage: ./mygrep \"search_string\" filename");
+        if (args.length == 1) {
+            handleStdinMode(args[0]);
+        } else if (args.length == 2) {
+            handleFileMode(args[0], args[1]);
+        } else {
+            System.err.println("Usage: ./mygrep \"search_string\" [filename]");
+            System.err.println("If filename is omitted, reads from STDIN");
             System.exit(1);
         }
+    }
 
-        String searchString = args[0];
-        String filename = args[1];
+    private static void handleStdinMode(String searchString) {
+        try {
+            List<String> lines = InputReader.readFromStdin();
+            List<String> matchingLines = GrepService.grep(searchString, lines);
+            GrepService.printResults(matchingLines);
+        } catch (IOException e) {
+            System.err.println("./mygrep: error reading from stdin: " + e.getMessage());
+            System.exit(1);
+        }
+    }
 
+    private static void handleFileMode(String searchString, String filename) {
         try {
             List<String> lines = readFile(filename);
             List<String> matchingLines = GrepService.grep(searchString, lines);
