@@ -4,11 +4,17 @@ public class GrepOptions {
     private final String searchString;
     private final String inputFile;
     private final String outputFile;
+    private final boolean caseInsensitive;
 
-    public GrepOptions(String searchString, String inputFile, String outputFile) {
+    public GrepOptions(String searchString, String inputFile, String outputFile, boolean caseInsensitive) {
         this.searchString = searchString;
         this.inputFile = inputFile;
         this.outputFile = outputFile;
+        this.caseInsensitive = caseInsensitive;
+    }
+
+    public GrepOptions(String searchString, String inputFile, String outputFile) {
+        this(searchString, inputFile, outputFile, false);
     }
 
     public String getSearchString() {
@@ -21,6 +27,10 @@ public class GrepOptions {
 
     public String getOutputFile() {
         return outputFile;
+    }
+
+    public boolean isCaseInsensitive() {
+        return caseInsensitive;
     }
 
     public boolean isStdinMode() {
