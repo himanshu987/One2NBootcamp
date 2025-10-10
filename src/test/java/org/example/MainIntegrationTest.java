@@ -5,7 +5,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -237,5 +239,192 @@ class MainIntegrationTest {
             Main.executeGrep(options2);
         });
         assertTrue(exception2.getMessage().contains("Is a directory"));
+    }
+
+    @Test
+    void testStory4StdinExample() throws Exception {
+        String input = "bar\nbarbazfoo\nFoobar\nfood\n";
+        InputStream stdin = new ByteArrayInputStream(input.getBytes());
+
+        List<String> lines = InputReader.readFromInputStream(stdin);
+
+        GrepOptions options = new GrepOptions("foo", null, null, true);
+        List<String> matches = GrepService.grep(
+                options.getSearchString(),
+                lines,
+                options.isCaseInsensitive()
+        );
+
+        OutputWriter.writeToStdout(matches);
+
+        String output = outContent.toString();
+        String[] outputLines = output.split("\n");
+
+        assertEquals(3, outputLines.length);
+        assertEquals("barbazfoo", outputLines[0]);
+        assertEquals("Foobar", outputLines[1]);
+        assertEquals("food", outputLines[2]);
+    }
+
+    @Test
+    void testCaseInsensitiveFileInput(@TempDir Path tempDir) throws Exception {
+        Path inputFile = tempDir.resolve("test.txt");
+        Files.writeString(inputFile, "Hello\nhello\nHELLO\nworld\n");
+
+        GrepOptions options = new GrepOptions("hello", inputFile.toString(), null, true);
+        Main.executeGrep(options);
+
+        String output = outContent.toString();
+        String[] lines = output.split("\n");
+
+        assertEquals(3, lines.length);
+        assertTrue(output.contains("Hello"));
+        assertTrue(output.contains("hello"));
+        assertTrue(output.contains("HELLO"));
+        assertFalse(output.contains("world"));
+    }
+
+    @Test
+    void testCaseInsensitiveWithFileOutput(@TempDir Path tempDir) throws Exception {
+        Path inputFile = tempDir.resolve("filename.txt");
+        Files.writeString(inputFile, "FOO\nfoo\nFoo\nbar\n");
+
+        Path outputFile = tempDir.resolve("outfile.txt");
+
+        GrepOptions options = new GrepOptions("foo", inputFile.toString(), outputFile.toString(), true);
+        Main.executeGrep(options);
+
+        assertTrue(Files.exists(outputFile));
+        List<String> outputLines = Files.readAllLines(outputFile);
+
+        assertEquals(3, outputLines.size());
+        assertTrue(outputLines.contains("FOO"));
+        assertTrue(outputLines.contains("foo"));
+        assertTrue(outputLines.contains("Foo"));
+    }
+
+    @Test
+    void testCombinedFlagsStory4Requirement(@TempDir Path tempDir) throws Exception {
+        Path inputFile = tempDir.resolve("filename.txt");
+        Files.writeString(inputFile,
+                "This is FOO\n" +
+                        "This is foo\n" +
+                        "This is Foo\n" +
+                        "This is bar\n"
+        );
+
+        Path outputFile = tempDir.resolve("outfile.txt");
+
+        String[] args = {"-i", "foo", inputFile.toString(), "-o", outputFile.toString()};
+        GrepOptions options = ArgumentParser.parse(args);
+
+        assertTrue(options.isCaseInsensitive());
+        assertEquals("foo", options.getSearchString());
+        assertEquals(inputFile.toString(), options.getInputFile());
+        assertEquals(outputFile.toString(), options.getOutputFile());
+
+        Main.executeGrep(options);
+
+        List<String> outputLines = Files.readAllLines(outputFile);
+        assertEquals(3, outputLines.size());
+    }
+
+    @Test
+    void testCaseSensitiveVsCaseInsensitiveComparison(@TempDir Path tempDir) throws Exception {
+        Path inputFile = tempDir.resolve("input.txt");
+        Files.writeString(inputFile, "Hello\nhello\nHELLO\nworld\n");
+
+        GrepOptions caseSensitiveOpts = new GrepOptions("hello", inputFile.toString(), null, false);
+        Main.executeGrep(caseSensitiveOpts);
+        String caseSensitiveOutput = outContent.toString();
+        outContent.reset();
+
+        GrepOptions caseInsensitiveOpts = new GrepOptions("hello", inputFile.toString(), null, true);
+        Main.executeGrep(caseInsensitiveOpts);
+        String caseInsensitiveOutput = outContent.toString();
+
+        assertEquals(1, caseSensitiveOutput.split("\n").length);
+        assertTrue(caseSensitiveOutput.contains("hello"));
+        assertFalse(caseSensitiveOutput.contains("Hello"));
+
+        assertEquals(3, caseInsensitiveOutput.split("\n").length);
+        assertTrue(caseInsensitiveOutput.contains("Hello"));
+        assertTrue(caseInsensitiveOutput.contains("hello"));
+        assertTrue(caseInsensitiveOutput.contains("HELLO"));
+    }
+
+    @Test
+    void testCaseInsensitivePreservesCase(@TempDir Path tempDir) throws Exception {
+        Path inputFile = tempDir.resolve("input.txt");
+        Files.writeString(inputFile, "FooBar\nfoobar\nFOOBAR\n");
+
+        Path outputFile = tempDir.resolve("output.txt");
+
+        GrepOptions options = new GrepOptions("foobar", inputFile.toString(), outputFile.toString(), true);
+        Main.executeGrep(options);
+
+        List<String> lines = Files.readAllLines(outputFile);
+
+        assertEquals("FooBar", lines.get(0));
+        assertEquals("foobar", lines.get(1));
+        assertEquals("FOOBAR", lines.get(2));
+    }
+
+    @Test
+    void testCaseInsensitiveNoMatches(@TempDir Path tempDir) throws Exception {
+        Path inputFile = tempDir.resolve("input.txt");
+        Files.writeString(inputFile, "bar\nbaz\nqux\n");
+
+        GrepOptions options = new GrepOptions("foo", inputFile.toString(), null, true);
+        Main.executeGrep(options);
+
+        assertEquals("", outContent.toString());
+    }
+
+    @Test
+    void testCaseInsensitivePartialMatch(@TempDir Path tempDir) throws Exception {
+        Path inputFile = tempDir.resolve("input.txt");
+        Files.writeString(inputFile,
+                "The word FOOBAR is here\n" +
+                        "Looking for foobar\n" +
+                        "No match\n"
+        );
+
+        GrepOptions options = new GrepOptions("foobar", inputFile.toString(), null, true);
+        Main.executeGrep(options);
+
+        String output = outContent.toString();
+        assertTrue(output.contains("FOOBAR"));
+        assertTrue(output.contains("foobar"));
+        assertFalse(output.contains("No match"));
+    }
+
+    @Test
+    void testBackwardCompatibilityWithoutIFlag(@TempDir Path tempDir) throws Exception {
+        Path inputFile = tempDir.resolve("input.txt");
+        Files.writeString(inputFile, "Hello\nhello\nHELLO\n");
+
+        String[] args = {"Hello", inputFile.toString()};
+        GrepOptions options = ArgumentParser.parse(args);
+
+        assertFalse(options.isCaseInsensitive());
+
+        Main.executeGrep(options);
+
+        String output = outContent.toString();
+        assertEquals("Hello\n", output);
+    }
+
+    @Test
+    void testMultipleFlagsInDifferentOrders(@TempDir Path tempDir) throws Exception {
+        Path inputFile = tempDir.resolve("input.txt");
+        Files.writeString(inputFile, "FOO\nfoo\nbar\n");
+
+        Path outputFile = tempDir.resolve("output.txt");
+
+        String[] args1 = {"-i", "foo", inputFile.toString(), "-o", outputFile.toString()};
+        GrepOptions opts1 = ArgumentParser.parse(args1);
+        assertTrue(opts1.isCaseInsensitive());
+        assertEquals(outputFile.toString(), opts1.getOutputFile());
     }
 }

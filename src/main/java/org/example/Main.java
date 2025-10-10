@@ -1,5 +1,4 @@
 package org.example;
-
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
@@ -27,7 +26,11 @@ public class Main {
     static void executeGrep(GrepOptions options) throws IOException, GrepException {
         List<String> lines = readInput(options);
 
-        List<String> matchingLines = GrepService.grep(options.getSearchString(), lines);
+        List<String> matchingLines = GrepService.grep(
+                options.getSearchString(),
+                lines,
+                options.isCaseInsensitive()
+        );
 
         OutputWriter.writeOutput(matchingLines, options.getOutputFile());
     }
