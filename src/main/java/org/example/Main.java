@@ -10,6 +10,7 @@ public class Main {
     public static void main(String[] args) {
         try {
             GrepOptions options = ArgumentParser.parse(args);
+
             executeGrep(options);
         } catch (IllegalArgumentException e) {
             System.err.println(e.getMessage());
@@ -39,12 +40,17 @@ public class Main {
         if (options.isStdinMode()) {
             return InputReader.readFromStdin();
         } else {
-            return readFile(options.getInputFile());
+            return readFile(options.getInputPath());
         }
     }
 
     public static List<String> readFile(String filename) throws IOException, GrepException {
         Path path = Path.of(filename);
+        return readFileFromPath(path);
+    }
+
+    public static List<String> readFileFromPath(Path path) throws IOException, GrepException {
+        String filename = path.toString();
 
         if (!Files.exists(path)) {
             throw new GrepException("./mygrep: " + filename + ": open: No such file or directory");
